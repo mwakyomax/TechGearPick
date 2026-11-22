@@ -1,0 +1,231 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "Hardware equipment category and subcategory taxonomy.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string", "minLength": 2, "maxLength": 100, "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "shortDescription": { "type": "string", "minLength": 10, "maxLength": 400 },
+        "editorialOverview": { "type": "string", "minLength": 10, "maxLength": 1200 },
+        "image": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "imageAlt": { "type": "string", "minLength": 2, "maxLength": 300 },
+        "subcategories": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "name", "shortDescription", "editorialOverview", "image", "imageAlt", "subcategories", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Technology product entry with technical specifications and configurable Amazon affiliate links.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string", "minLength": 2, "maxLength": 120, "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "brand": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "categoryName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "subcategory": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "description": { "type": "string", "minLength": 10, "maxLength": 1000 },
+        "image": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "imageAlt": { "type": "string", "minLength": 2, "maxLength": 300 },
+        "price": { "type": "number" },
+        "currency": { "type": "string", "enum": ["USD"] },
+        "amazonUrl": { "type": "string", "minLength": 8, "maxLength": 600 },
+        "affiliateUrl": { "type": "string", "minLength": 8, "maxLength": 600 },
+        "amazonAsin": { "type": "string", "maxLength": 20 },
+        "specifications": { "type": "array" },
+        "features": { "type": "array" },
+        "pros": { "type": "array" },
+        "cons": { "type": "array" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "availability": { "type": "string", "enum": ["Check Availability", "Widely Available", "Discontinued"] },
+        "featured": { "type": "boolean" },
+        "publicationDate": { "type": "string", "minLength": 8, "maxLength": 30 },
+        "keywords": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "name", "brand", "category", "categoryName", "subcategory", "description", "image", "imageAlt", "currency", "amazonUrl", "affiliateUrl", "specifications", "features", "pros", "cons", "availability", "featured", "publicationDate", "keywords", "createdAt", "updatedAt"]
+    },
+    "ProductReview": {
+      "title": "ProductReview",
+      "description": "Research-based technical product review linked to a Product.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "productId": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "title": { "type": "string", "minLength": 5, "maxLength": 220 },
+        "methodologyLabel": { "type": "string", "maxLength": 80 },
+        "summary": { "type": "string", "minLength": 10, "maxLength": 600 },
+        "introduction": { "type": "string", "minLength": 10, "maxLength": 3000 },
+        "performanceOverview": { "type": "string", "minLength": 10, "maxLength": 4000 },
+        "bestUseCases": { "type": "array" },
+        "whoShouldBuy": { "type": "array" },
+        "whoShouldAvoid": { "type": "array" },
+        "alternativeSlugs": { "type": "array" },
+        "finalVerdict": { "type": "string", "minLength": 10, "maxLength": 2000 },
+        "authorName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "authorRole": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "publishedAt": { "type": "string", "maxLength": 30 },
+        "updatedAt": { "type": "string", "maxLength": 30 },
+        "readingTimeMinutes": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "serverUpdatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "productId", "title", "methodologyLabel", "summary", "introduction", "performanceOverview", "bestUseCases", "whoShouldBuy", "whoShouldAvoid", "alternativeSlugs", "finalVerdict", "authorName", "authorRole", "publishedAt", "updatedAt", "readingTimeMinutes", "createdAt", "serverUpdatedAt"]
+    },
+    "ComparisonArticle": {
+      "title": "ComparisonArticle",
+      "description": "Side-by-side comparison guide with structured specification matrix.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "title": { "type": "string", "minLength": 5, "maxLength": 220 },
+        "subtitle": { "type": "string", "minLength": 5, "maxLength": 400 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "publishedAt": { "type": "string", "maxLength": 30 },
+        "updatedAt": { "type": "string", "maxLength": 30 },
+        "readingTimeMinutes": { "type": "number" },
+        "summary": { "type": "string", "minLength": 10, "maxLength": 800 },
+        "image": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "imageAlt": { "type": "string", "minLength": 2, "maxLength": 300 },
+        "options": { "type": "array" },
+        "matrix": { "type": "array" },
+        "performanceDifferences": { "type": "string", "minLength": 10, "maxLength": 3000 },
+        "valueComparison": { "type": "string", "minLength": 10, "maxLength": 3000 },
+        "recommendations": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "serverUpdatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "title", "subtitle", "category", "publishedAt", "updatedAt", "readingTimeMinutes", "summary", "image", "imageAlt", "options", "matrix", "performanceDifferences", "valueComparison", "recommendations", "createdAt", "serverUpdatedAt"]
+    },
+    "BuyingGuide": {
+      "title": "BuyingGuide",
+      "description": "Criteria-based hardware buying guide.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "title": { "type": "string", "minLength": 5, "maxLength": 220 },
+        "excerpt": { "type": "string", "minLength": 10, "maxLength": 600 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "categorySlug": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "publishedAt": { "type": "string", "maxLength": 30 },
+        "updatedAt": { "type": "string", "maxLength": 30 },
+        "readingTimeMinutes": { "type": "number" },
+        "image": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "imageAlt": { "type": "string", "minLength": 2, "maxLength": 300 },
+        "author": { "type": "object" },
+        "buyingCriteria": { "type": "array" },
+        "picks": { "type": "array" },
+        "closingAdvice": { "type": "string", "minLength": 10, "maxLength": 2000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "serverUpdatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "title", "excerpt", "category", "categorySlug", "publishedAt", "updatedAt", "readingTimeMinutes", "image", "imageAlt", "author", "buyingCriteria", "picks", "closingAdvice", "createdAt", "serverUpdatedAt"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Editorial blog article.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "title": { "type": "string", "minLength": 5, "maxLength": 220 },
+        "excerpt": { "type": "string", "minLength": 10, "maxLength": 600 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "categorySlug": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "publishedAt": { "type": "string", "maxLength": 30 },
+        "updatedAt": { "type": "string", "maxLength": 30 },
+        "readingTimeMinutes": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "image": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "imageAlt": { "type": "string", "minLength": 2, "maxLength": 300 },
+        "author": { "type": "object" },
+        "tableOfContents": { "type": "array" },
+        "sections": { "type": "array" },
+        "relatedSlugs": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "serverUpdatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["slug", "title", "excerpt", "category", "categorySlug", "publishedAt", "updatedAt", "readingTimeMinutes", "featured", "image", "imageAlt", "author", "tableOfContents", "sections", "relatedSlugs", "createdAt", "serverUpdatedAt"]
+    },
+    "NewsletterSubscriber": {
+      "title": "NewsletterSubscriber",
+      "description": "Email subscriber persisted from newsletter signup form.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 5, "maxLength": 254 },
+        "source": { "type": "string", "maxLength": 80 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "source", "createdAt"]
+    },
+    "ContactInquiry": {
+      "title": "ContactInquiry",
+      "description": "Contact form submission stored for admin review.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "email": { "type": "string", "minLength": 5, "maxLength": 254 },
+        "topic": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "message": { "type": "string", "minLength": 5, "maxLength": 3000 },
+        "status": { "type": "string", "enum": ["new", "reviewed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "topic", "message", "status", "createdAt", "updatedAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized CMS administrator profile.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 5, "maxLength": 254 },
+        "role": { "type": "string", "enum": ["admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Authorized CMS administrators."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Published equipment categories."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Published hardware catalog entries."
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/ProductReview" },
+      "description": "Published research-based product reviews."
+    },
+    "/comparisons/{comparisonId}": {
+      "schema": { "$ref": "#/entities/ComparisonArticle" },
+      "description": "Published side-by-side product comparisons."
+    },
+    "/guides/{guideId}": {
+      "schema": { "$ref": "#/entities/BuyingGuide" },
+      "description": "Published buying guides."
+    },
+    "/articles/{articleId}": {
+      "schema": { "$ref": "#/entities/Article" },
+      "description": "Published technology blog articles."
+    },
+    "/newsletter_subscribers/{subscriberId}": {
+      "schema": { "$ref": "#/entities/NewsletterSubscriber" },
+      "description": "Newsletter email subscribers (PII: admin read only)."
+    },
+    "/contact_inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/ContactInquiry" },
+      "description": "Contact form inquiries (PII: admin read/update only)."
+    }
+  }
+}

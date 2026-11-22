@@ -1,0 +1,404 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'elieza12321@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidStringList(arr, maxItems) {
+      return arr is list && arr.size() <= maxItems && (arr.size() == 0 || arr[0] is string);
+    }
+
+    function isValidMapList(arr, maxItems) {
+      return arr is list && arr.size() <= maxItems && (arr.size() == 0 || arr[0] is map);
+    }
+
+    // Entity Validators
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt']) &&
+        data.keys().hasOnly(['email', 'role', 'createdAt']) &&
+        isValidString(data.email, 5, 254) &&
+        data.role == 'admin' &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll([
+        'slug', 'name', 'shortDescription', 'editorialOverview',
+        'image', 'imageAlt', 'subcategories', 'createdAt', 'updatedAt'
+      ]) &&
+        data.keys().hasOnly([
+          'slug', 'name', 'shortDescription', 'editorialOverview',
+          'image', 'imageAlt', 'subcategories', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidString(data.slug, 2, 100) &&
+        isValidString(data.name, 2, 100) &&
+        isValidString(data.shortDescription, 10, 400) &&
+        isValidString(data.editorialOverview, 10, 1200) &&
+        isValidString(data.image, 1, 500) &&
+        isValidString(data.imageAlt, 2, 300) &&
+        isValidMapList(data.subcategories, 20) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+        'slug', 'name', 'brand', 'category', 'categoryName', 'subcategory',
+        'description', 'image', 'imageAlt', 'currency', 'amazonUrl', 'affiliateUrl',
+        'specifications', 'features', 'pros', 'cons', 'availability', 'featured',
+        'publicationDate', 'keywords', 'createdAt', 'updatedAt'
+      ]) &&
+        data.keys().hasOnly([
+          'slug', 'name', 'brand', 'category', 'categoryName', 'subcategory',
+          'description', 'image', 'imageAlt', 'price', 'priceNote', 'currency',
+          'amazonUrl', 'affiliateUrl', 'amazonAsin', 'specifications', 'features',
+          'pros', 'cons', 'rating', 'reviewCount', 'availability', 'featured',
+          'publicationDate', 'keywords', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidString(data.slug, 2, 120) &&
+        isValidString(data.name, 2, 180) &&
+        isValidString(data.brand, 1, 80) &&
+        isValidString(data.category, 2, 80) &&
+        isValidString(data.categoryName, 2, 100) &&
+        isValidString(data.subcategory, 2, 100) &&
+        isValidString(data.description, 10, 1000) &&
+        isValidString(data.image, 1, 500) &&
+        isValidString(data.imageAlt, 2, 300) &&
+        data.currency == 'USD' &&
+        isValidString(data.amazonUrl, 8, 600) &&
+        isValidString(data.affiliateUrl, 8, 600) &&
+        (!('amazonAsin' in data) || isValidString(data.amazonAsin, 0, 20)) &&
+        (!('price' in data) || (data.price is number && data.price >= 0)) &&
+        (!('priceNote' in data) || isValidString(data.priceNote, 0, 120)) &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 0 && data.rating <= 5)) &&
+        (!('reviewCount' in data) || (data.reviewCount is number && data.reviewCount >= 0)) &&
+        isValidMapList(data.specifications, 25) &&
+        isValidStringList(data.features, 20) &&
+        isValidStringList(data.pros, 15) &&
+        isValidStringList(data.cons, 15) &&
+        data.availability in ['Check Availability', 'Widely Available', 'Discontinued'] &&
+        data.featured is bool &&
+        isValidString(data.publicationDate, 8, 30) &&
+        isValidStringList(data.keywords, 20) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll([
+        'slug', 'productId', 'title', 'methodologyLabel', 'summary', 'introduction',
+        'performanceOverview', 'bestUseCases', 'whoShouldBuy', 'whoShouldAvoid',
+        'alternativeSlugs', 'finalVerdict', 'authorName', 'authorRole',
+        'publishedAt', 'updatedAt', 'readingTimeMinutes', 'createdAt', 'serverUpdatedAt'
+      ]) &&
+        data.keys().hasOnly([
+          'slug', 'productId', 'title', 'methodologyLabel', 'summary', 'introduction',
+          'performanceOverview', 'bestUseCases', 'whoShouldBuy', 'whoShouldAvoid',
+          'alternativeSlugs', 'finalVerdict', 'authorName', 'authorRole',
+          'publishedAt', 'updatedAt', 'readingTimeMinutes', 'createdAt', 'serverUpdatedAt'
+        ]) &&
+        isValidString(data.slug, 2, 140) &&
+        isValidId(data.productId) &&
+        isValidString(data.title, 5, 220) &&
+        isValidString(data.methodologyLabel, 3, 80) &&
+        isValidString(data.summary, 10, 600) &&
+        isValidString(data.introduction, 10, 3000) &&
+        isValidString(data.performanceOverview, 10, 4000) &&
+        isValidStringList(data.bestUseCases, 15) &&
+        isValidStringList(data.whoShouldBuy, 15) &&
+        isValidStringList(data.whoShouldAvoid, 15) &&
+        isValidStringList(data.alternativeSlugs, 10) &&
+        isValidString(data.finalVerdict, 10, 2000) &&
+        isValidString(data.authorName, 2, 100) &&
+        isValidString(data.authorRole, 2, 100) &&
+        isValidString(data.publishedAt, 8, 30) &&
+        isValidString(data.updatedAt, 8, 30) &&
+        data.readingTimeMinutes is number &&
+        data.readingTimeMinutes >= 1 &&
+        data.readingTimeMinutes <= 120 &&
+        data.createdAt is timestamp &&
+        data.serverUpdatedAt is timestamp;
+    }
+
+    function isValidComparison(data) {
+      return data.keys().hasAll([
+        'slug', 'title', 'subtitle', 'category', 'publishedAt', 'updatedAt',
+        'readingTimeMinutes', 'summary', 'image', 'imageAlt', 'options', 'matrix',
+        'performanceDifferences', 'valueComparison', 'recommendations',
+        'createdAt', 'serverUpdatedAt'
+      ]) &&
+        data.keys().hasOnly([
+          'slug', 'title', 'subtitle', 'category', 'publishedAt', 'updatedAt',
+          'readingTimeMinutes', 'summary', 'image', 'imageAlt', 'options', 'matrix',
+          'performanceDifferences', 'valueComparison', 'recommendations',
+          'createdAt', 'serverUpdatedAt'
+        ]) &&
+        isValidString(data.slug, 2, 140) &&
+        isValidString(data.title, 5, 220) &&
+        isValidString(data.subtitle, 5, 400) &&
+        isValidString(data.category, 2, 100) &&
+        isValidString(data.publishedAt, 8, 30) &&
+        isValidString(data.updatedAt, 8, 30) &&
+        data.readingTimeMinutes is number &&
+        data.readingTimeMinutes >= 1 &&
+        data.readingTimeMinutes <= 120 &&
+        isValidString(data.summary, 10, 800) &&
+        isValidString(data.image, 1, 500) &&
+        isValidString(data.imageAlt, 2, 300) &&
+        isValidMapList(data.options, 6) &&
+        isValidMapList(data.matrix, 30) &&
+        isValidString(data.performanceDifferences, 10, 3000) &&
+        isValidString(data.valueComparison, 10, 3000) &&
+        isValidMapList(data.recommendations, 10) &&
+        data.createdAt is timestamp &&
+        data.serverUpdatedAt is timestamp;
+    }
+
+    function isValidGuide(data) {
+      return data.keys().hasAll([
+        'slug', 'title', 'excerpt', 'category', 'categorySlug', 'publishedAt',
+        'updatedAt', 'readingTimeMinutes', 'image', 'imageAlt', 'author',
+        'buyingCriteria', 'picks', 'closingAdvice', 'createdAt', 'serverUpdatedAt'
+      ]) &&
+        data.keys().hasOnly([
+          'slug', 'title', 'excerpt', 'category', 'categorySlug', 'publishedAt',
+          'updatedAt', 'readingTimeMinutes', 'image', 'imageAlt', 'author',
+          'buyingCriteria', 'picks', 'closingAdvice', 'createdAt', 'serverUpdatedAt'
+        ]) &&
+        isValidString(data.slug, 2, 140) &&
+        isValidString(data.title, 5, 220) &&
+        isValidString(data.excerpt, 10, 600) &&
+        isValidString(data.category, 2, 100) &&
+        isValidString(data.categorySlug, 2, 100) &&
+        isValidString(data.publishedAt, 8, 30) &&
+        isValidString(data.updatedAt, 8, 30) &&
+        data.readingTimeMinutes is number &&
+        data.readingTimeMinutes >= 1 &&
+        data.readingTimeMinutes <= 120 &&
+        isValidString(data.image, 1, 500) &&
+        isValidString(data.imageAlt, 2, 300) &&
+        data.author is map &&
+        isValidMapList(data.buyingCriteria, 15) &&
+        isValidMapList(data.picks, 15) &&
+        isValidString(data.closingAdvice, 10, 2000) &&
+        data.createdAt is timestamp &&
+        data.serverUpdatedAt is timestamp;
+    }
+
+    function isValidArticle(data) {
+      return data.keys().hasAll([
+        'slug', 'title', 'excerpt', 'category', 'categorySlug', 'publishedAt',
+        'updatedAt', 'readingTimeMinutes', 'featured', 'image', 'imageAlt',
+        'author', 'tableOfContents', 'sections', 'relatedSlugs',
+        'createdAt', 'serverUpdatedAt'
+      ]) &&
+        data.keys().hasOnly([
+          'slug', 'title', 'excerpt', 'category', 'categorySlug', 'publishedAt',
+          'updatedAt', 'readingTimeMinutes', 'featured', 'image', 'imageAlt',
+          'author', 'tableOfContents', 'sections', 'relatedSlugs',
+          'createdAt', 'serverUpdatedAt'
+        ]) &&
+        isValidString(data.slug, 2, 140) &&
+        isValidString(data.title, 5, 220) &&
+        isValidString(data.excerpt, 10, 600) &&
+        isValidString(data.category, 2, 100) &&
+        isValidString(data.categorySlug, 2, 100) &&
+        isValidString(data.publishedAt, 8, 30) &&
+        isValidString(data.updatedAt, 8, 30) &&
+        data.readingTimeMinutes is number &&
+        data.readingTimeMinutes >= 1 &&
+        data.readingTimeMinutes <= 120 &&
+        data.featured is bool &&
+        isValidString(data.image, 1, 500) &&
+        isValidString(data.imageAlt, 2, 300) &&
+        data.author is map &&
+        isValidMapList(data.tableOfContents, 25) &&
+        isValidMapList(data.sections, 25) &&
+        isValidStringList(data.relatedSlugs, 10) &&
+        data.createdAt is timestamp &&
+        data.serverUpdatedAt is timestamp;
+    }
+
+    function isValidSubscriber(data) {
+      return data.keys().hasAll(['email', 'source', 'createdAt']) &&
+        data.keys().hasOnly(['email', 'source', 'createdAt']) &&
+        isValidString(data.email, 5, 254) &&
+        data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$') &&
+        isValidString(data.source, 1, 80) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidInquiry(data) {
+      return data.keys().hasAll(['name', 'email', 'topic', 'message', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['name', 'email', 'topic', 'message', 'status', 'createdAt', 'updatedAt']) &&
+        isValidString(data.name, 2, 120) &&
+        isValidString(data.email, 5, 254) &&
+        data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$') &&
+        isValidString(data.topic, 2, 100) &&
+        isValidString(data.message, 5, 3000) &&
+        data.status in ['new', 'reviewed'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // Collection Rules
+    match /admins/{uid} {
+      allow get: if isValidId(uid) && (isAdmin() || (isVerifiedUser() && request.auth.uid == uid));
+      allow list: if isAdmin();
+      allow create: if isValidId(uid) && isAdmin() && isValidAdminUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(uid) && isAdmin() && isValidAdminUser(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['email', 'role']);
+      allow delete: if isValidId(uid) && isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId);
+      allow list: if true;
+      allow create: if isValidId(categoryId) && isAdmin() && isValidCategory(incoming()) &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(categoryId) && isAdmin() && isValidCategory(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'slug', 'name', 'shortDescription', 'editorialOverview', 'image', 'imageAlt', 'subcategories', 'updatedAt'
+        ]);
+      allow delete: if isValidId(categoryId) && isAdmin();
+    }
+
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if true;
+      allow create: if isValidId(productId) && isAdmin() && isValidProduct(incoming()) &&
+        incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isValidId(productId) && isAdmin() && isValidProduct(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'slug', 'name', 'brand', 'category', 'categoryName', 'subcategory',
+          'description', 'image', 'imageAlt', 'price', 'priceNote', 'currency',
+          'amazonUrl', 'affiliateUrl', 'amazonAsin', 'specifications', 'features',
+          'pros', 'cons', 'rating', 'reviewCount', 'availability', 'featured',
+          'publicationDate', 'keywords', 'updatedAt'
+        ]);
+      allow delete: if isValidId(productId) && isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow get: if isValidId(reviewId);
+      allow list: if true;
+      allow create: if isValidId(reviewId) && isAdmin() && isValidReview(incoming()) &&
+        exists(/databases/$(database)/documents/products/$(incoming().productId)) &&
+        incoming().createdAt == request.time && incoming().serverUpdatedAt == request.time;
+      allow update: if isValidId(reviewId) && isAdmin() && isValidReview(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().serverUpdatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'slug', 'productId', 'title', 'methodologyLabel', 'summary', 'introduction',
+          'performanceOverview', 'bestUseCases', 'whoShouldBuy', 'whoShouldAvoid',
+          'alternativeSlugs', 'finalVerdict', 'authorName', 'authorRole',
+          'publishedAt', 'updatedAt', 'readingTimeMinutes', 'serverUpdatedAt'
+        ]);
+      allow delete: if isValidId(reviewId) && isAdmin();
+    }
+
+    match /comparisons/{comparisonId} {
+      allow get: if isValidId(comparisonId);
+      allow list: if true;
+      allow create: if isValidId(comparisonId) && isAdmin() && isValidComparison(incoming()) &&
+        incoming().createdAt == request.time && incoming().serverUpdatedAt == request.time;
+      allow update: if isValidId(comparisonId) && isAdmin() && isValidComparison(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().serverUpdatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'slug', 'title', 'subtitle', 'category', 'publishedAt', 'updatedAt',
+          'readingTimeMinutes', 'summary', 'image', 'imageAlt', 'options', 'matrix',
+          'performanceDifferences', 'valueComparison', 'recommendations', 'serverUpdatedAt'
+        ]);
+      allow delete: if isValidId(comparisonId) && isAdmin();
+    }
+
+    match /guides/{guideId} {
+      allow get: if isValidId(guideId);
+      allow list: if true;
+      allow create: if isValidId(guideId) && isAdmin() && isValidGuide(incoming()) &&
+        incoming().createdAt == request.time && incoming().serverUpdatedAt == request.time;
+      allow update: if isValidId(guideId) && isAdmin() && isValidGuide(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().serverUpdatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'slug', 'title', 'excerpt', 'category', 'categorySlug', 'publishedAt',
+          'updatedAt', 'readingTimeMinutes', 'image', 'imageAlt', 'author',
+          'buyingCriteria', 'picks', 'closingAdvice', 'serverUpdatedAt'
+        ]);
+      allow delete: if isValidId(guideId) && isAdmin();
+    }
+
+    match /articles/{articleId} {
+      allow get: if isValidId(articleId);
+      allow list: if true;
+      allow create: if isValidId(articleId) && isAdmin() && isValidArticle(incoming()) &&
+        incoming().createdAt == request.time && incoming().serverUpdatedAt == request.time;
+      allow update: if isValidId(articleId) && isAdmin() && isValidArticle(incoming()) &&
+        incoming().createdAt == existing().createdAt && incoming().serverUpdatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'slug', 'title', 'excerpt', 'category', 'categorySlug', 'publishedAt',
+          'updatedAt', 'readingTimeMinutes', 'featured', 'image', 'imageAlt',
+          'author', 'tableOfContents', 'sections', 'relatedSlugs', 'serverUpdatedAt'
+        ]);
+      allow delete: if isValidId(articleId) && isAdmin();
+    }
+
+    match /newsletter_subscribers/{subscriberId} {
+      allow get: if isValidId(subscriberId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(subscriberId) && isValidSubscriber(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(subscriberId) && isAdmin();
+    }
+
+    match /contact_inquiries/{inquiryId} {
+      allow get: if isValidId(inquiryId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(inquiryId) && isValidInquiry(incoming()) &&
+        incoming().status == 'new' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(inquiryId) && isAdmin() && isValidInquiry(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isValidId(inquiryId) && isAdmin();
+    }
+  }
+}
